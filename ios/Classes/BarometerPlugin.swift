@@ -38,7 +38,7 @@ public class BarometerPlugin: NSObject, FlutterPlugin {
         }
         if let pressure = data?.pressure.doubleValue {
           self?.currentPressure = pressure * 10 // Convert kPa to hPa 
-          self.eventSink?(self.currentPressure)
+            self?.eventSink?(self?.currentPressure)
         }
       }
     } else {
@@ -52,7 +52,7 @@ public class BarometerPlugin: NSObject, FlutterPlugin {
 
 }
 
-extension SwiftBarometerPlugin: FlutterStreamHandler {
+extension BarometerPlugin: FlutterStreamHandler {
   public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
     eventSink = events
     return nil
