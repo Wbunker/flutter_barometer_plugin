@@ -10,6 +10,7 @@ import androidx.annotation.NonNull
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -28,9 +29,26 @@ class BarometerPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, SensorEv
   private var barometerReading: Double = 0.0
   private var activityBinding: ActivityPluginBinding? = null
 
+  private lateinit var eventChannel: EventChannel
+  private var eventSink: EventChannel.EventSink? = null
+
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "barometer")
     channel.setMethodCallHandler(this)
+
+    eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, "barometer/barometerEvent")
+    eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
+        override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+            eventSink = events
+        }
+
+        override fun onCancel(arguments: Any?) {
+            eventSink = null
+        }
+    })
+
+
+
     sensorManager = flutterPluginBinding.applicationContext.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     barometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE)
     barometerSensor?.also { sensor ->
@@ -64,6 +82,7 @@ class BarometerPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, SensorEv
   override fun onSensorChanged(event: SensorEvent) {
       if (event.sensor.type == Sensor.TYPE_PRESSURE) {
           barometerReading = event.values[0].toDouble()
+          eventSink?.success(barometerReading)
       }
   }
 

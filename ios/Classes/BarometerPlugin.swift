@@ -3,6 +3,7 @@ import UIKit
 import CoreMotion
 
 public class BarometerPlugin: NSObject, FlutterPlugin {
+  private var eventSink: FlutterEventSink?
   private let altimeter = CMAltimeter()
   private var currentPressure: Double = 0.0
 
@@ -10,7 +11,10 @@ public class BarometerPlugin: NSObject, FlutterPlugin {
     let channel = FlutterMethodChannel(name: "barometer", binaryMessenger: registrar.messenger())
     let instance = BarometerPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
+    let eventChannel = FlutterEventChannel(name: "barometer/barometerEvent", binaryMessenger: registrar.messenger())
+    eventChannel.setStreamHandler(instance)
     instance.startBarometerUpdates()
+
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -33,7 +37,8 @@ public class BarometerPlugin: NSObject, FlutterPlugin {
           return
         }
         if let pressure = data?.pressure.doubleValue {
-          self?.currentPressure = pressure * 10 // Convert kPa to hPa (if needed)
+          self?.currentPressure = pressure * 10 // Convert kPa to hPa 
+          self.eventSink?(self.currentPressure)
         }
       }
     } else {
@@ -45,4 +50,16 @@ public class BarometerPlugin: NSObject, FlutterPlugin {
     altimeter.stopRelativeAltitudeUpdates()
   }
 
+}
+
+extension SwiftBarometerPlugin: FlutterStreamHandler {
+  public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    eventSink = events
+    return nil
+  }
+
+  public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    eventSink = nil
+    return nil
+  }
 }

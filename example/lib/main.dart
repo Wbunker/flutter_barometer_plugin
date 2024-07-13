@@ -82,7 +82,16 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             children: [
               Text('Running on: $_platformVersion\n'),
-              Text('Barometer reading: $_barometerReading\n'),
+              StreamBuilder<double>(
+                stream: Barometer.barometerStream,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return Text('Barometer: ${snapshot.data}\n');
+                  } else {
+                    return const Text('Barometer: no data\n');
+                  }
+                },
+              ),
             ],
           ),
         ),
