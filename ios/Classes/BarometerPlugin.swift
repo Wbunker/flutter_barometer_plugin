@@ -17,7 +17,7 @@ public class BarometerPlugin: NSObject, FlutterPlugin {
     switch call.method {
     case "getPlatformVersion":
       result("iOS " + UIDevice.current.systemVersion)
-    case "getBarometer":
+    case "getBarometerReading":
       result(currentPressure)
     default:
       result(FlutterMethodNotImplemented)
